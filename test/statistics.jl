@@ -300,19 +300,6 @@ for vd in [1, 2], zm in [true, false]
     @inferred cor(X, Y, vd)
 end
 
-
-# test hist
-
-@test sum(hist([1,2,3])[2]) == 3
-@test hist(Union{}[])[2] == []
-@test hist([1])[2] == [1]
-@test hist([1,2,3],[0,2,4]) == ([0,2,4],[2,1])
-@test hist([1,2,3],0:2:4) == (0:2:4,[2,1])
-@test all(hist([1:100;]/100,0.0:0.01:1.0)[2] .==1)
-@test hist([1,1,1,1,1])[2][1] == 5
-@test sum(hist2d(rand(100, 2))[3]) == 100
-@test hist([1 2 3 4;1 2 3 4]) == (0.0:2.0:4.0, [2 2 0 0; 0 0 2 2])
-
 @test midpoints(1.0:1.0:10.0) == 1.5:1.0:9.5
 @test midpoints(1:10) == 1.5:9.5
 @test midpoints(Float64[1.0:1.0:10.0;]) == Float64[1.5:1.0:9.5;]
@@ -323,31 +310,6 @@ end
 @test quantile(100.0:-1.0:0.0, 0.0:0.1:1.0) == collect(0.0:10.0:100.0)
 @test quantile(0.0:100.0, 0.0:0.1:1.0, sorted=true) == collect(0.0:10.0:100.0)
 @test quantile(100f0:-1f0:0.0, 0.0:0.1:1.0) == collect(0f0:10f0:100f0)
-
-
-# test invalid hist nbins argument (#9999)
-@test_throws ArgumentError hist(Int[], -1)
-@test hist(Int[], 0)[2] == Int[]
-@test_throws ArgumentError hist([1,2,3], -1)
-@test_throws ArgumentError hist([1,2,3], 0)
-@test_throws ArgumentError hist([1.0,2.0,3.0], -1)
-@test_throws ArgumentError hist([1.0,2.0,3.0], 0)
-
-@test histrange([1, 2, 3, 4], 4) == 0.0:1.0:4.0
-@test histrange([1, 2, 2, 4], 4) == 0.0:1.0:4.0
-@test histrange([1, 10], 4) == 0.0:5.0:10.0
-@test histrange([1, 20], 4) == 0.0:5.0:20.0
-@test histrange([1, 600], 4) == 0.0:200.0:600.0
-@test histrange([1, -1000], 4) == -1500.0:500.0:500.0
-
-# issue #13326
-l,h = extrema(histrange([typemin(Int),typemax(Int)], 10))
-@test l <= typemin(Int)
-@test h >= typemax(Int)
-
-@test_throws ArgumentError histrange([1, 10], 0)
-@test_throws ArgumentError histrange([1, 10], -1)
-@test_throws ArgumentError histrange(Float64[],-1)
 
 # variance of complex arrays (#13309)
 let z = rand(Complex128, 10)
