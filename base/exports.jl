@@ -914,11 +914,6 @@ export
 # statistics
     cor,
     cov,
-    hist,
-    hist!,
-    hist2d,
-    hist2d!,
-    histrange,
     mean!,
     mean,
     median!,
