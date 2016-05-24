@@ -72,7 +72,7 @@ static const jl_fptr_t id_to_fptrs[] = {
   jl_f_getfield, jl_f_setfield, jl_f_fieldtype, jl_f_nfields,
   jl_f_arrayref, jl_f_arrayset, jl_f_arraysize, jl_f_apply_type,
   jl_f_applicable, jl_f_invoke, jl_unprotect_stack, jl_f_sizeof, jl_f__expr,
-  jl_f_intrinsic_call,
+  jl_f_intrinsic_call, jl_f_struct,
   NULL };
 
 // pointers to non-AST-ish objects in a compressed tree
@@ -1249,7 +1249,7 @@ static jl_value_t *jl_deserialize_datatype(ios_t *s, int pos, jl_value_t **loc)
             dt->name == jl_pointer_type->name || dt->name == jl_type_type->name ||
             dt->name == jl_simplevector_type->name || dt->name == jl_abstractarray_type->name ||
             dt->name == jl_densearray_type->name || dt->name == jl_tuple_typename ||
-            dt->name == jl_vararg_type->name) {
+            dt->name == jl_vararg_type->name || dt->name == jl_struct_typename) {
             // builtin types are not serialized, so their caches aren't
             // explicitly saved. so we reconstruct the caches of builtin
             // parametric types here.
@@ -2472,7 +2472,7 @@ void jl_init_serializer(void)
                      jl_typector_type->name, jl_intrinsic_type->name, jl_task_type->name,
                      jl_labelnode_type->name, jl_linenumbernode_type->name, jl_builtin_type->name,
                      jl_gotonode_type->name, jl_quotenode_type->name,
-                     jl_globalref_type->name,
+                     jl_globalref_type->name, jl_struct_type->name,
 
                      jl_root_task,
 

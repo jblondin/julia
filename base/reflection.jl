@@ -56,7 +56,7 @@ end
 
 Get the name of field `i` of a `DataType`.
 """
-fieldname(t::DataType, i::Integer) = t.name.names[i]::Symbol
+fieldname(t::DataType, i::Integer) = isdefined(t,:names) ? t.names[i]::Symbol : t.name.names[i]::Symbol
 fieldname{T<:Tuple}(t::Type{T}, i::Integer) = i < 1 || i > nfields(t) ? throw(BoundsError(t, i)) : Int(i)
 
 """

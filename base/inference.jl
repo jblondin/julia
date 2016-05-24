@@ -296,7 +296,35 @@ add_tfunc(is, 2, 2,
             return Bool
         end
     end)
-add_tfunc(isdefined, 1, IInf, (args...)->Bool)
+function isdefined_tfunc(args...)
+    a1 = widenconst(args[1])
+    if isleaftype(a1)
+        if a1 <: Array # TODO
+        elseif length(args) == 2 && isa(args[2],Const)
+            n = nfields(a1)
+            val = args[2].val
+            idx::Int = 0
+            if isa(val, Symbol)
+                for i=1:n
+                    if fieldname(a1, i) === val
+                        idx = i
+                        break
+                    end
+                end
+            elseif isa(val, Int)
+                idx = val::Int
+            end
+
+            if 1 <= idx <= a1.ninitialized
+                return Const(true)
+            elseif idx <= 0 || idx > n
+                return Const(false)
+            end
+        end
+    end
+    Bool
+end
+add_tfunc(isdefined, 1, IInf, isdefined_tfunc)
 add_tfunc(Core.sizeof, 1, 1, x->Int)
 add_tfunc(nfields, 1, 1, x->(isa(x,Const) ? Const(nfields(x.val)) :
                              isType(x) && isleaftype(x.parameters[1]) ? Const(nfields(x.parameters[1])) :
@@ -469,7 +497,7 @@ function getfield_tfunc(s0::ANY, name)
                 end
             end
         end
-        snames = s.name.names
+        snames = isdefined(s,:names) ? s.names : s.name.names
         for i=1:length(snames)
             if is(snames[i],fld)
                 R = s.types[i]
@@ -642,6 +670,31 @@ function builtin_tfunction(f::ANY, argtypes::Array{Any,1}, sv::InferenceState)
             end
         end
         return Const(tuple(map(a->a.val, argtypes)...))
+    elseif is(f,Core.struct)
+        println("struct")
+        println(argtypes)
+        if length(argtypes) >= 1
+            println("letsgo")
+            if isa(argtypes[1],Const)
+                println("done")
+                names = argtypes[1].val
+                values = argtypes[2:end]
+                has_dup = false
+                n = nfields(names)
+                for i=2:n
+                    name = getfield(names, i)
+                    for j=1:i-1
+                        if name == getfield(names, j)
+                            has_dup = true
+                            break
+                        end
+                    end
+                end
+                if !has_dup && length(values) == nfields(names)
+                    return Core.Struct{names, limit_tuple_type(argtypes_to_type(values))}
+                end
+            end
+        end
     elseif is(f,svec)
         return SimpleVector
     elseif is(f,arrayset)
@@ -2165,7 +2218,7 @@ end
 const _pure_builtins = Any[tuple, svec, fieldtype, apply_type, is, isa, typeof]
 
 # known effect-free calls (might not be affect-free)
-const _pure_builtins_volatile = Any[getfield, arrayref]
+const _pure_builtins_volatile = Any[getfield, arrayref, isdefined]
 
 function is_pure_builtin(f::ANY)
     if contains_is(_pure_builtins, f)
@@ -2313,6 +2366,17 @@ function inlineable(f::ANY, ft::ANY, e::Expr, atypes::Vector{Any}, sv::Inference
     end
     if isa(f,IntrinsicFunction) || ft ⊑ IntrinsicFunction
         return NF
+    end
+    #=println("F ==============")
+    println(f)
+    println(istopfunction(topmod,f,:struct))
+    println(e.typ)
+    println("================")=#
+    if (is(f, Core.struct) &&
+        e.typ <: Core.Struct && isleaftype(e.typ))
+        new_e = Expr(:new, e.typ, argexprs[3:end]...)
+        new_e.typ = e.typ
+        return (new_e, ())
     end
 
     atype = argtypes_to_type(atypes)
@@ -3258,7 +3322,7 @@ function gotoifnot_elim_pass!(linfo::LambdaInfo, sv::InferenceState)
         # doesn't recognize the error for strictly non-Bool condition)
         if isa(val, Bool)
             # in case there's side effects... (like raising `UndefVarError`)
-            body[i - 1] = cond
+            body[i - 1] = effect_free(cond, sv, true) ? nothing : cond
             if val === false
                 insert!(body, i, GotoNode(expr.args[2]))
                 i += 1

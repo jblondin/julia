@@ -335,12 +335,12 @@ atdoc!(λ) = global atdoc = λ
 module TopModule
     # this defines the types that lowering expects to be defined in a (top) module
     # that are usually inherited from Core, but could be defined custom for a module
-    using Core: Box, IntrinsicFunction, Builtin,
+    using Core: Box, IntrinsicFunction, Builtin, Struct,
             arrayref, arrayset, arraysize,
-            _expr, _apply, typeassert, apply_type, svec, kwfunc
-    export Box, IntrinsicFunction, Builtin,
+            _expr, _apply, typeassert, apply_type, svec, kwfunc, struct
+    export Box, IntrinsicFunction, Builtin, Struct,
             arrayref, arrayset, arraysize,
-            _expr, _apply, typeassert, apply_type, svec, kwfunc
+            _expr, _apply, typeassert, apply_type, svec, kwfunc, struct
 end
 using .TopModule
 ccall(:jl_set_istopmod, Void, (Bool,), true)

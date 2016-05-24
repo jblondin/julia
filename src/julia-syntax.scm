@@ -437,6 +437,30 @@
             ,@lno
             ,@stmts) isstaged)
 
+        ,(method-def-expr-
+          name
+          (filter ;; remove sparams that don't occur, to avoid printing the warning twice
+           (lambda (s) (let ((name (if (symbol? s) s (cadr s))))
+                         (expr-contains-eq name (cons 'list argl))))
+           positional-sparams)
+          `((|::|
+             ;; if there are optional positional args, we need to be able to reference the function name
+             ,(if (any kwarg? pargl) (gensy) UNUSED)
+             (call (core kwftype) ,ftype)) (:: ,kw (core Struct)) ,@pargl ,@vararg)
+          `(block
+            ,(foldl (lambda (kvf rest)
+                      `(block
+                        (= ,(decl-var (car kvf)) (call (core getfield) ,kw (quote ,(car kvf))))
+                        ,rest))
+                    '()
+                    (map list vars vals flags))
+            (return (call ,mangled
+                          ,@keynames
+                          ,@(if (null? restkw) '() (list rkw))
+                          ,@(map arg-name pargl)
+                          ,@(if (null? vararg) '()
+                                (list `(... ,(arg-name (car vararg))))))))
+                    #f)
         ;; call with unsorted keyword args. this sorts and re-dispatches.
         ,(method-def-expr-
           name
