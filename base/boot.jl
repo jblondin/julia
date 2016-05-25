@@ -332,15 +332,26 @@ end
 atdoc     = (str, expr) -> Expr(:escape, expr)
 atdoc!(λ) = global atdoc = λ
 
+immutable KwKeys{names}
+end
+function structdiff
+end
+function structmerge
+end
+function fieldname
+end
+
 module TopModule
     # this defines the types that lowering expects to be defined in a (top) module
     # that are usually inherited from Core, but could be defined custom for a module
-    using Core: Box, IntrinsicFunction, Builtin, Struct,
+    using Core: Box, IntrinsicFunction, Builtin, Struct, KwKeys,
             arrayref, arrayset, arraysize,
-            _expr, _apply, typeassert, apply_type, svec, kwfunc, struct
-    export Box, IntrinsicFunction, Builtin, Struct,
+            _expr, _apply, typeassert, apply_type, svec, kwfunc, fieldname,
+            struct, structdiff, structmerge
+    export Box, IntrinsicFunction, Builtin, Struct, KwKeys,
             arrayref, arrayset, arraysize,
-            _expr, _apply, typeassert, apply_type, svec, kwfunc, struct
+            _expr, _apply, typeassert, apply_type, svec, kwfunc, fieldname,
+            struct, structdiff, structmerge
 end
 using .TopModule
 ccall(:jl_set_istopmod, Void, (Bool,), true)

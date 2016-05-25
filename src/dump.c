@@ -568,6 +568,7 @@ static void jl_serialize_datatype(ios_t *s, jl_datatype_t *dt)
 
     jl_serialize_value(s, dt->parameters);
     jl_serialize_value(s, dt->name);
+    jl_serialize_value(s, dt->names);
     jl_serialize_value(s, dt->super);
 }
 
@@ -1242,6 +1243,8 @@ static jl_value_t *jl_deserialize_datatype(ios_t *s, int pos, jl_value_t **loc)
     jl_gc_wb(dt, dt->parameters);
     dt->name = (jl_typename_t*)jl_deserialize_value(s, (jl_value_t**)&dt->name);
     jl_gc_wb(dt, dt->name);
+    dt->names = (jl_svec_t*)jl_deserialize_value(s, (jl_value_t**)&dt->names);
+    jl_gc_wb(dt, dt->names);
     dt->super = (jl_datatype_t*)jl_deserialize_value(s, (jl_value_t**)&dt->super);
     jl_gc_wb(dt, dt->super);
     if (datatype_list) {

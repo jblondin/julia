@@ -298,6 +298,12 @@ add_tfunc(is, 2, 2,
     end)
 function isdefined_tfunc(args...)
     a1 = widenconst(args[1])
+    if isType(a1)
+        a1 = typeof(a1.parameters[1])
+        if a1 === TypeVar
+            return Bool
+        end
+    end
     if isleaftype(a1)
         if a1 <: Array # TODO
         elseif length(args) == 2 && isa(args[2],Const)
@@ -498,6 +504,10 @@ function getfield_tfunc(s0::ANY, name)
             end
         end
         snames = isdefined(s,:names) ? s.names : s.name.names
+        if s <: Core.Struct && !isleaftype(s)
+            # TODO
+            return Any,false
+        end
         for i=1:length(snames)
             if is(snames[i],fld)
                 R = s.types[i]
@@ -671,12 +681,8 @@ function builtin_tfunction(f::ANY, argtypes::Array{Any,1}, sv::InferenceState)
         end
         return Const(tuple(map(a->a.val, argtypes)...))
     elseif is(f,Core.struct)
-        println("struct")
-        println(argtypes)
         if length(argtypes) >= 1
-            println("letsgo")
             if isa(argtypes[1],Const)
-                println("done")
                 names = argtypes[1].val
                 values = argtypes[2:end]
                 has_dup = false
@@ -691,7 +697,8 @@ function builtin_tfunction(f::ANY, argtypes::Array{Any,1}, sv::InferenceState)
                     end
                 end
                 if !has_dup && length(values) == nfields(names)
-                    return Core.Struct{names, limit_tuple_type(argtypes_to_type(values))}
+                    tup = limit_tuple_type(argtypes_to_type(values))
+                    return isleaftype(tup) ? Core.Struct{names, tup} : Core.Struct{names,TypeVar(:_,tup)}
                 end
             end
         end
