@@ -2193,7 +2193,9 @@ static jl_value_t *inst_datatype(jl_datatype_t *dt, jl_svec_t *p, jl_value_t **i
             jl_svec_t *names = jl_alloc_svec_uninit(jl_nfields(names_tup));
             memcpy(jl_svec_data(names), (jl_value_t**)names_tup, jl_nfields(names_tup)*sizeof(jl_value_t*));
             ndt->names = names;
+            jl_gc_wb(ndt,ndt->names);
             ndt->types = ((jl_datatype_t*)values_tt)->parameters;
+            jl_gc_wb(ndt, ndt->types);
         }
     }
     ndt->mutabl = dt->mutabl;
