@@ -1827,8 +1827,12 @@ function eigvecs{T}(A::AbstractTriangular{T})
 end
 det{T}(A::UnitUpperTriangular{T}) = one(T)
 det{T}(A::UnitLowerTriangular{T}) = one(T)
+logdet{T}(A::UnitUpperTriangular{T}) = zero(T)
+logdet{T}(A::UnitLowerTriangular{T}) = zero(T)
 det{T}(A::UpperTriangular{T}) = prod(diag(A.data))
 det{T}(A::LowerTriangular{T}) = prod(diag(A.data))
+logdet{T}(A::UpperTriangular{T}) = sum(log(diag(A.data)))
+logdet{T}(A::LowerTriangular{T}) = sum(log(diag(A.data)))
 
 eigfact(A::AbstractTriangular) = Eigen(eigvals(A), eigvecs(A))
 
