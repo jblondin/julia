@@ -1254,6 +1254,10 @@ end
 
 @deprecate showcompact_lim show
 
+@deprecate print_escaped escape_string
+@deprecate print_unescaped unescape_string
+@deprecate print_joined join
+
 # During the 0.5 development cycle, do not add any deprecations below this line
 # To be deprecated in 0.6
 
